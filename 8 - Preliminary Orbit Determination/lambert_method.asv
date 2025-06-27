@@ -1,0 +1,42 @@
+%% Algorithm 5.2
+clear
+close all
+clc
+
+r1_vec = [5000; 10000; 2100];
+r2_vec = [-14600; 2500; 7000];
+dt = 3600;
+
+
+r1 = norm(r1_vec);
+r2 = norm(r2_vec);
+%% Assume a prograde trajectory
+h_hat = cross(r1_vec, r2_vec) / r1 / r2;
+if(h_hat(3)>=0)
+    theta = acosd(dot(r1_vec,r2_vec)/r1/r2); % [rad]
+else
+    theta = 360 - acosd(dot(r1_vec,r2_vec)/r1/r2); % [rad]
+end
+A = sind(theta) * sqrt(r1*r2/(1-cosd(theta)));
+%% Solve for z
+S = @(z) [(sinh(sqrt(-z(z<0)))-sqrt(-z(z<0)))./sqrt(-z(z<0)).^3, 1/6*z(z==0)^0, (sqrt(z(z>0))-sin(sqrt(z(z>0))))./sqrt(z(z>0).^3)];
+C = @(z) [(cosh(sqrt(-z(z<0)))-1)./-z(z<0), 1/2*z(z==0)^0, (1-cos(sqrt(z(z>0))))./z(z>0)];
+S_d = @(z) 1/(2*z) * (C(z)-3*S(z));
+C_d = @(z) 1/(2*z) * (1-z*S(z)-2*C(z));
+y = @(z) r1 + r2 + A*(z*S(z)-1)/sqrt(C(z));
+y_d = @(z) A/4*sqrt(C(z));
+F = @(z) (y(z)/C(z))^(3/2)*S(z) + A*sqrt(y(z)) - sqrt(mu)*dt;
+
+F_d = @(z) feval(@(x) x{1+()})
+% function [f_d] = F_d(z) 
+    % if(z==0)
+    %     F_d = @(z) sqrt(2)/40*y(0)^(3/2) + A/8*(sqrt(y(0) + A*sqrt(1/2/y(0))));
+    % else
+    %     F_d = @(z) (y(z)/C(z))^(3/2)*(1/(2*z)*(C(z)-1.5*S(z)/C(z))+0.75*S(z)^2/C(z))  +  A/8*(3*S(z)/C(z)*sqrt(y(z))+A*sqrt(C(z)/y(z)));
+    % end
+% end
+
+Z = newton_raphson(F, F_d, 1.5)
+
+
+

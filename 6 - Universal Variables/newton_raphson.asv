@@ -1,0 +1,11 @@
+function newton_raphson(fHandle, fdHandle, x0, tolerance)
+
+if(~exist(tolerance)
+
+
+f = fHandle(x0);
+fd = fdHandle(x0);
+
+
+
+end
